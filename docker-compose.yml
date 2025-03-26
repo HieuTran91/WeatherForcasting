@@ -1,0 +1,73 @@
+version: '3.8'
+
+x-airflow-common:
+  &airflow-common
+  build: .
+  image: custom-airflow:latest
+  environment:
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/weatherdb
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'False'
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./model/train_weather_model.py:/opt/airflow/train_weather_model.py
+    - ./model:/opt/airflow/models
+  depends_on:
+    - postgres
+
+services:
+  postgres:
+    image: postgres:13
+    container_name: weather_postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: weatherdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./data/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+
+  airflow-init:
+    <<: *airflow-common
+    container_name: airflow_init
+    entrypoint: >
+      bash -c "
+      airflow db init &&
+      airflow users create --username admin --firstname Admin --lastname Airflow --role Admin --email admin@example.com --password admin
+      "
+    restart: on-failure
+
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: airflow_webserver
+    command: webserver
+    ports:
+      - "8080:8080"
+
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: airflow_scheduler
+    command: scheduler
+
+  dashboard:
+    image: python:3.10
+    container_name: weather_dashboard
+    working_dir: /app
+    volumes:
+      - ./dashboard:/app
+      - ./model:/app/models
+    ports:
+      - "8501:8501"
+    command: >
+      bash -c "
+      pip install streamlit joblib pandas scikit-learn &&
+      streamlit run app.py --server.port 8501 --server.address 0.0.0.0
+      "
+    depends_on:
+      - airflow-webserver
+      - airflow-scheduler
+
+volumes:
+  postgres_data:
