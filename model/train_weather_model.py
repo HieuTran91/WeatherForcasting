@@ -8,11 +8,15 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 
+import os
+is_docker = os.getenv("RUNNING_IN_DOCKER") == "1"
+
 POSTGRES_CONN = {
     'host': 'postgres',
     'dbname': 'weatherdb',
     'user': 'airflow',
-    'password': 'airflow'
+    'password': 'airflow',
+    'port': 5432
 }
 
 def fetch_data():
@@ -22,6 +26,7 @@ def fetch_data():
     return df
 
 def train_and_save_model():
+    print("🔥 TRAINING MODEL STARTED")
     df = fetch_data()
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     df['hour'] = df['timestamp'].dt.hour
@@ -46,8 +51,13 @@ def train_and_save_model():
     ])
     weather_model.fit(X_train_cls, y_cls_train)
 
-    joblib.dump(temp_model, 'temperature_model.pkl')
-    joblib.dump(weather_model, 'weather_model.pkl')
+    joblib.dump(temp_model, '/opt/airflow/model/temperature_model.pkl')
+    joblib.dump(weather_model, '/opt/airflow/model/weather_model.pkl')
+
 
 if __name__ == '__main__':
-    train_and_save_model()
+    try:
+        print("Running model training manually...")
+        train_and_save_model()
+    except Exception as e:
+        print("Error during training:", e)

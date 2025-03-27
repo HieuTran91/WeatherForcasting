@@ -60,9 +60,9 @@ def transform_data():
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2024, 3, 25),
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5)
+    'start_date': datetime(2025, 3, 1),
+    'retries': 2,
+    'retry_delay': timedelta(minutes=3)
 }
 
 with DAG(

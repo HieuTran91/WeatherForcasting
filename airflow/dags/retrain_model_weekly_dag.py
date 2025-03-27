@@ -3,15 +3,15 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
 import sys
 
-sys.path.append('/opt/airflow')
+sys.path.append('/opt/airflow/model')
 from train_weather_model import train_and_save_model
 
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2024, 3, 25),
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5)
+    'start_date': datetime(2025, 1, 1),
+    'retries': 3,
+    'retry_delay': timedelta(minutes=2)
 }
 
 with DAG(

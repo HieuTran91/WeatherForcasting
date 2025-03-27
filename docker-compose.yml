@@ -8,10 +8,13 @@ x-airflow-common:
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/weatherdb
     AIRFLOW__CORE__LOAD_EXAMPLES: 'False'
+    POSTGRES_HOST: 'postgres'
+    # RUNNING_IN_DOCKER: '1'
+
   volumes:
     - ./airflow/dags:/opt/airflow/dags
-    - ./model/train_weather_model.py:/opt/airflow/train_weather_model.py
-    - ./model:/opt/airflow/models
+    # - ./model/train_weather_model.py:/opt/airflow/train_weather_model.py
+    - ./model:/opt/airflow/model
   depends_on:
     - postgres
 
@@ -57,12 +60,12 @@ services:
     working_dir: /app
     volumes:
       - ./dashboard:/app
-      - ./model:/app/models
+      - ./model:/app/model
     ports:
       - "8501:8501"
     command: >
       bash -c "
-      pip install streamlit joblib pandas scikit-learn &&
+      pip install streamlit pandas scikit-learn joblib dill &&
       streamlit run app.py --server.port 8501 --server.address 0.0.0.0
       "
     depends_on:

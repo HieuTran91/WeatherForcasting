@@ -5,8 +5,8 @@ from datetime import datetime
 
 st.title(" Weather Forecast Dashboard")
 
-temp_model = joblib.load("temperature_model.pkl")
-weather_model = joblib.load("weather_model.pkl")
+weather_model = joblib.load("model/weather_model.pkl")
+temp_model = joblib.load("model/temperature_model.pkl")
 
 st.sidebar.header("Input Parameters")
 hour = st.sidebar.slider("Hour", 0, 23, 12)
